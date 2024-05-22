@@ -17,8 +17,8 @@ void CST820::begin(void)
     // int i2c_master_port = 0;
     i2c_config_t conf = {
         .mode = I2C_MODE_MASTER,
-        .sda_io_num = 21,
-        .scl_io_num = 22,
+        .sda_io_num = _sda,
+        .scl_io_num = _scl,
         .sda_pullup_en = GPIO_PULLUP_ENABLE,
         .scl_pullup_en = GPIO_PULLUP_ENABLE
     };
