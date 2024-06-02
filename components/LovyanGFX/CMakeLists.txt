@@ -39,4 +39,4 @@ idf_component_register(SRCS ${SRCS}
                        REQUIRES ${COMPONENT_REQUIRES}
                        )
 
-target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-uninitialized)
+target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-uninitialized -O3)
