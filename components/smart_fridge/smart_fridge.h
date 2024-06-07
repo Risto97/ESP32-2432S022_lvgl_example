@@ -8,13 +8,17 @@
 #include <string>
 #include <cstdint>
 #include "lvgl.h"
+#include <array>
+
+#include <freertos/FreeRTOS.h>
+#include "freertos/queue.h"
 
 class Product {
     public:
         Product(const char * _name, uint32_t _id) : m_name(_name), m_id(_id){
         }
 
-        Product() : m_name(""), m_id(-1){
+        Product() : m_name("Unknown product"), m_id(-1){
         }
 
         void print(){
@@ -80,6 +84,9 @@ class StockedProduct {
             return m_location_id;
         }
 
+    public:
+        std::array<lv_obj_t*, 5> m_gui_elements;
+
     private:
         Product *m_product;
         float m_amount;
@@ -103,12 +110,13 @@ class Location {
             }
         }
 
-        void add_product(StockedProduct prod){
+        StockedProduct *add_product(StockedProduct prod){
             if(m_stock.count(prod.get_product_id()) > 0){
                 m_stock[prod.get_product_id()].add_amount(prod.get_amount());
             } else {
                 m_stock.insert(std::make_pair(prod.get_product_id(), prod));
             }
+            return &m_stock[prod.get_product_id()];
         }
 
         std::string get_name(){
@@ -124,6 +132,90 @@ class Location {
         int m_id;
         std::map<uint32_t, StockedProduct> m_stock;
 
+
+};
+
+class Grocy {
+    public:
+
+        enum class CmdType {
+            add_item,
+            consume_item,
+            inventory_item,
+            pull_stock,
+            pull_locations,
+            pull_products,
+            pull_barcodes,
+            pull_all
+        };
+
+        typedef struct  {
+
+            CmdType type;
+            struct {
+                uint32_t product_id;
+                uint32_t location_id;
+                float amount;
+            } item;
+        } grocy_cmd_t;
+
+        Grocy(QueueHandle_t *grocy_queue) {
+            queue = grocy_queue;
+        }
+
+        void add_item(uint32_t product_id, float amount){
+            grocy_cmd_t cmd;
+
+            cmd.type = CmdType::add_item;
+            cmd.item.product_id = product_id;
+            cmd.item.amount = amount;
+
+
+            if(xQueueSend(*queue, (void *)&cmd, 10) != pdTRUE){
+                ESP_LOGE("GROCY API", "Cannot add command to queue");
+            }
+        }
+
+        void consume_item(uint32_t product_id, float amount){
+            grocy_cmd_t cmd;
+
+            cmd.type = CmdType::consume_item;
+            cmd.item.product_id = product_id;
+            cmd.item.amount = amount;
+
+            if(xQueueSend(*queue, (void *)&cmd, 10) != pdTRUE){
+                ESP_LOGE("GROCY API", "Cannot add command to queue");
+            }
+        }
+
+        void inventory_item(uint32_t product_id, uint32_t location_id, float amount){
+            grocy_cmd_t cmd;
+
+            cmd.type = CmdType::inventory_item;
+            cmd.item.product_id = product_id;
+            cmd.item.location_id = location_id;
+            cmd.item.amount = amount;
+
+            if(xQueueSend(*queue, (void *)&cmd, 10) != pdTRUE){
+                ESP_LOGE("GROCY API", "Cannot add command to queue");
+            }
+        }
+
+        void pull_stock(){
+        }
+
+        void pull_products(){
+        }
+
+        void pull_barcodes(){
+        }
+
+        void pull_all(){
+        }
+
+
+    private:
+        QueueHandle_t *queue;
 };
 
 #endif // !__SMART_FRIDGE_H_

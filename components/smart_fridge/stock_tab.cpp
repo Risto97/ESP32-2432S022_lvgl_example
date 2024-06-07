@@ -1,31 +1,40 @@
 #include "stock_tab.h"
+#include "esp_log.h"
 #include "smart_fridge.h"
+#include "src/core/lv_event.h"
+#include "src/extra/widgets/spinbox/lv_spinbox.h"
 #include <cstdint>
+#include <tuple>
 
-// void StockTab::spinbox_incr_cb(lv_event_t *e){
-//     lv_event_code_t code = lv_event_get_code(e);
-//     if(code == LV_EVENT_SHORT_CLICKED || code == LV_EVENT_LONG_PRESSED_REPEAT) {
-//         auto item = (StockItem *)lv_event_get_user_data(e);
-//         lv_obj_t *sp_box = item->m_gui_elements[3];
-//
-//         float step = (double)lv_spinbox_get_step(sp_box) / 10;
-//         // g_grocy.purchase_product(item->m_product.get_product_id(), step, "2024-05-15", "purchase", 2.0);
-//         lv_spinbox_increment(sp_box);
-//     }
-//
-// }
-// void StockTab::spinbox_decr_cb(lv_event_t *e){
-//     lv_event_code_t code = lv_event_get_code(e);
-//     if(code == LV_EVENT_SHORT_CLICKED || code == LV_EVENT_LONG_PRESSED_REPEAT) {
-//         auto item = (StockItem *)lv_event_get_user_data(e);
-//         lv_obj_t *sp_box = item->m_gui_elements[3];
-//
-//         float step = (double)lv_spinbox_get_step(sp_box) / 10;
-//         // g_grocy.consume_product(item->m_product.get_product_id(), step);
-//         lv_spinbox_decrement(sp_box);
-//     }
-// }
-//
+extern Grocy *g_grocy;
+
+void StockTab::spinbox_incr_cb(lv_event_t *e){
+    lv_event_code_t code = lv_event_get_code(e);
+    if(code == LV_EVENT_SHORT_CLICKED || code == LV_EVENT_LONG_PRESSED_REPEAT) {
+        auto item = (StockedProduct *)lv_event_get_user_data(e);
+        // lv_obj_t * item = (lv_obj_t *)lv_event_get_user_data(e);
+        lv_obj_t *sp_box = item->m_gui_elements[3];
+        lv_spinbox_increment(sp_box);
+
+        float val = (double)lv_spinbox_get_value(sp_box) / 10;
+        // g_grocy->add_item(item->get_product_id(), step);
+        g_grocy->inventory_item(item->get_product_id(), item->get_location_id(), val);
+
+    }
+
+}
+void StockTab::spinbox_decr_cb(lv_event_t *e){
+    lv_event_code_t code = lv_event_get_code(e);
+    if(code == LV_EVENT_SHORT_CLICKED || code == LV_EVENT_LONG_PRESSED_REPEAT) {
+        auto item = (StockedProduct *)lv_event_get_user_data(e);
+        lv_obj_t *sp_box = item->m_gui_elements[3];
+        lv_spinbox_decrement(sp_box);
+
+        float val = (double)lv_spinbox_get_value(sp_box) / 10;
+        g_grocy->inventory_item(item->get_product_id(), item->get_location_id(), val);
+    }
+}
+
 // void StockTab::add_item_cb(lv_event_t *e){
 //     lv_event_code_t code = lv_event_get_code(e);
 //     if(code == LV_EVENT_SHORT_CLICKED || code == LV_EVENT_LONG_PRESSED_REPEAT) {
@@ -185,7 +194,7 @@ void StockTab::add_product_to_list(StockedProduct *item){
 
     /* Label for the name of the product */
     lv_obj_t * name_col_obj = lv_obj_create(m_flex_col);
-    lv_obj_set_size(name_col_obj, LV_PCT(50), row_height);
+    lv_obj_set_size(name_col_obj, LV_PCT(53), row_height);
 
     lv_obj_t * name_label = lv_label_create(name_col_obj);
     lv_label_set_text_fmt(name_label, item->get_name().c_str());
@@ -193,7 +202,7 @@ void StockTab::add_product_to_list(StockedProduct *item){
 
     /* Decrement button */
     lv_obj_t * decr_btn = lv_btn_create(m_flex_col);
-    lv_obj_set_size(decr_btn, LV_PCT(7), row_height);
+    lv_obj_set_size(decr_btn, LV_PCT(10), row_height);
     lv_obj_align_to(decr_btn, m_flex_col, LV_ALIGN_RIGHT_MID, 0, 0);
     lv_obj_set_style_bg_img_src(decr_btn, LV_SYMBOL_MINUS, 0);
 
@@ -213,15 +222,15 @@ void StockTab::add_product_to_list(StockedProduct *item){
     //
     // /* Increment button */
     lv_obj_t * incr_btn = lv_btn_create(m_flex_col);
-    lv_obj_set_size(incr_btn, LV_PCT(7), row_height);
+    lv_obj_set_size(incr_btn, LV_PCT(10), row_height);
     lv_obj_align_to(decr_btn, spinbox, LV_ALIGN_OUT_LEFT_MID, -5, 0);
     lv_obj_set_style_bg_img_src(incr_btn, LV_SYMBOL_PLUS, 0);
 
     // m_rows[item->get_name()] = {{name_col_obj, name_label, decr_btn, spinbox, incr_btn}};
-    // item->m_gui_elements = {{name_col_obj, name_label, decr_btn, spinbox, incr_btn}};
+    item->m_gui_elements = {{name_col_obj, name_label, decr_btn, spinbox, incr_btn}};
     // Callbacks
-    // lv_obj_add_event_cb(incr_btn, spinbox_incr_cb, LV_EVENT_ALL, item);
-    // lv_obj_add_event_cb(decr_btn, spinbox_decr_cb, LV_EVENT_ALL, item);
+    lv_obj_add_event_cb(incr_btn, spinbox_incr_cb, LV_EVENT_ALL, item);
+    lv_obj_add_event_cb(decr_btn, spinbox_decr_cb, LV_EVENT_ALL, item);
 
     // create_add_item_button();
 }

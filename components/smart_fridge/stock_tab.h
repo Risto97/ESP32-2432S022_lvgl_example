@@ -28,8 +28,8 @@ class StockTab {
         //
         static constexpr uint16_t row_height = 45;
 
-        // static void spinbox_incr_cb(lv_event_t *e);
-        // static void spinbox_decr_cb(lv_event_t *e);
+        static void spinbox_incr_cb(lv_event_t *e);
+        static void spinbox_decr_cb(lv_event_t *e);
         // static void add_item_cb(lv_event_t *e);
         // static void text_write_cb(lv_event_t * e);
         // void create_new_item_form();

@@ -5,8 +5,8 @@
 #include "hal/gpio_types.h"
 #include "lvgl.h"
 
-#define TFT_WIDTH 240
-#define TFT_HEIGHT 320
+#define TFT_WIDTH 320
+#define TFT_HEIGHT 480
 
 constexpr gpio_num_t BACKLIGHT_PIN = GPIO_NUM_0;
 constexpr gpio_num_t TOUCH_I2C_SDA_PIN = GPIO_NUM_21;
@@ -23,8 +23,10 @@ class LGFX : public lgfx::LGFX_Device
 {
 private:
 
-    lgfx::Panel_ST7789 _panel_instance; // ST7789UI
-    lgfx::Bus_Parallel8 _bus_instance;  // MCU8080 8B
+    lgfx::Panel_ST7796 _panel_instance;
+    lgfx::Bus_SPI _bus_instance;
+    lgfx::Light_PWM     _light_instance;
+    lgfx::Touch_GT911 _touch_instance;
 
 public:
     LGFX(void);
